@@ -2,9 +2,10 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 from phase2User import insert_unit
 from phase2DataBase import create_tables
+import subprocess # allows you to run new applications or scripts as separate processes.
 
 # Initialize database tables
-create_tables()  # Ensures tables are created at the start of the program
+create_tables()
 
 # Function to handle adding a rental unit by calling insert_unit
 def add_unit():
@@ -20,16 +21,25 @@ def add_unit():
             features = entry_features.get()  # Get features input from the entry field
             price = float(entry_price.get())  # Get price input from the entry field, converting it to a float
 
-            result = insert_unit(username, title, description, features,
-                                 price)  # Call the function to insert rental unit data
+            result = insert_unit(username, title, description, features, price)  # Call the function to insert rental unit data
             messagebox.showinfo("Add Rental Unit", result)  # Show a message box with the result of the operation
 
         except ValueError:
-            messagebox.showerror("Input Error",
-                                 "Please enter valid numbers for Price.")  # Handle invalid input
+            messagebox.showerror("Input Error", "Please enter valid numbers for Price.")  # Handle invalid input
+
+
+
+
+
+# Function to open the phase2Searchinterface.py search window
+def open_search_interface():
+    subprocess.Popen(["python3", "phase2SearchInterface.py"])  # Open the search interface in a new window
+
+
+
+
 
 # This portion of the code is responsible for the GUI
-
 root = tk.Tk()
 root.title("Rental Unit System")
 
@@ -54,6 +64,9 @@ for i, field in enumerate(fields):
 
 # Button to submit the form and add the rental unit, calling add_unit when clicked
 tk.Button(root, text="Add Unit", command=add_unit).grid(row=len(fields) + 1, column=0, columnspan=2)
+
+# Button to open the search interface, calling open_search_interface when clicked
+tk.Button(root, text="Search for Unit", command=open_search_interface).grid(row=len(fields) + 2, column=0, columnspan=2)
 
 root.geometry("700x600")
 root.mainloop()
