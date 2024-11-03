@@ -3,6 +3,7 @@ from tkinter import messagebox
 from phase2User import insert_unit
 from MainDataBase import create_tables
 import subprocess
+import bcrypt
 
 # Initialize database tables
 create_tables()
@@ -10,6 +11,11 @@ create_tables()
 
 def open_search_interface():
     subprocess.Popen(["python3", "phase2SearchInterface.py"])
+
+def logout():
+    # Close the current window and open phase1GUIapp
+    root.withdraw()# Close the current window
+    subprocess.Popen(["python3", "phase1GUIapp.py"]) # Open phase1GUIapp
 
 
 # Modify the add_unit function to use the logged-in username from Phase 1
@@ -31,7 +37,7 @@ def add_unit(username):
 
 # GUI layout
 def start_phase2gui(username):
-    global entry_title, entry_description, entry_features, entry_price  # Declare as global here
+    global entry_title, entry_description, entry_features, entry_price, root
 
     root = tk.Tk()
     root.title("Rental Unit System")
@@ -58,6 +64,10 @@ def start_phase2gui(username):
                                                                               columnspan=2)
     tk.Button(root, text="Search for Unit", command=open_search_interface).grid(row=len(fields) + 2, column=0,
                                                                                 columnspan=2)
+
+    # Logout button
+    tk.Button(root, text="Logout", command=logout).grid(row=len(fields) + 3, column=0, columnspan=2)
+
 
     root.geometry("700x600")
     root.mainloop()

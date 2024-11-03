@@ -1,5 +1,6 @@
 from MainDataBase import conn, cursor, hash_password, check_password
 import sqlite3
+import bcrypt
 
 # Function for registering a new user
 def signup(username, password, confirm_password, first_name, last_name, email, phone):

@@ -3,6 +3,7 @@ from tkinter import messagebox
 from phase1UserRegistration import signup, login
 from MainDataBase import create_tables
 from phase2GUI import start_phase2gui
+import bcrypt
 
 # Function to handle user registration
 def register_user():
