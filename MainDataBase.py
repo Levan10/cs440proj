@@ -1,23 +1,23 @@
 import sqlite3
+import bcrypt
 from datetime import datetime
 
-# In phase2DataBase(this) file, creating simple tables required for the user.
-# In the req, user can have the ability to enter a rental unit, view the rental units, and review them.
-# A user cannot review their own unit and is limited to 2 posts per day and 3 reviews per day
-# (Gonna have to figure out the time system)
-# Review consists of, "A dropdown menu to choose "excellent/good/fair/poor", and then a description such as
-# "This is a cool place to rent."
-
+# Connect to the SQLite database (creates the file if it doesn't exist)
 conn = sqlite3.connect('Rental_Units.db')
 cursor = conn.cursor()
 
 # Create tables for users, rental units, and reviews
 def create_tables():
-    # User table to track registered users
+    # Create the users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            firstName TEXT NOT NULL,
+            lastName TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            phone TEXT UNIQUE NOT NULL
         )
     ''')
 
@@ -51,5 +51,18 @@ def create_tables():
 
     conn.commit()
 
+# Function to hash the password using bcrypt for security
+def hash_password(password: str) -> bytes:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+# Function to verify that the provided password matches the stored hashed password
+def check_password(hashed_password: bytes, user_password: str) -> bool:
+    return bcrypt.checkpw(user_password.encode('utf-8'), hashed_password)
+
+# Close the database connection when done
 def close_connection():
     conn.close()
+
+# Call this function to ensure the tables are created when the script is run
+if __name__ == "__main__":
+    create_tables()
