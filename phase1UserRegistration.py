@@ -1,5 +1,6 @@
 from MainDataBase import conn, cursor, hash_password, check_password
 import sqlite3
+import sys
 import bcrypt
 
 # Function for registering a new user

@@ -2,7 +2,7 @@ import sqlite3
 import tkinter as tk
 from tkinter import ttk, messagebox
 import subprocess
-
+import sys
 # Database Connection
 conn = sqlite3.connect('Rental_Units.db')
 cursor = conn.cursor()
@@ -57,11 +57,17 @@ entry_feature = tk.Entry(root)
 entry_feature.grid(row=0, column=1, padx=10, pady=10)
 tk.Button(root, text="Search", command=on_search).grid(row=0, column=2, padx=10, pady=10)
 
+# Get the logged-in username from command-line arguments
+if len(sys.argv) > 1:
+    logged_in_user = sys.argv[1]  # This will be the username of the logged-in user
+else:
+    logged_in_user = None  # Handle case where no username is passed
 
-logged_in_username = "James" # this is a place holder, dont change !
-
+# Review button using the logged-in username
+review_button = tk.Button(root, text="Review", command=lambda: open_review_interface(logged_in_user))
+review_button.grid(row=0, column=3, padx=10, pady=10)
 # Review button
-review_button = tk.Button(root, text="Review", command=lambda: open_review_interface(logged_in_username))
+review_button = tk.Button(root, text="Review", command=lambda: open_review_interface(logged_in_user))
 review_button.grid(row=0, column=3, padx=10, pady=10)
 
 # Results table with Unit ID column
