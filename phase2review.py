@@ -26,30 +26,36 @@ except sqlite3.OperationalError:
 def submit_review():
     rating = rating_var.get()
     description = entry_description.get("1.0", tk.END).strip()
+
+    # Get today's date formatted as YYYY-MM-DD
     today = datetime.now().strftime('%Y-%m-%d')  # Current date
 
     if not rating or not description:
         messagebox.showerror("Input Error", "Please fill in all fields.")
         return
 
+    # Check if the user is the owner of the rental unit
     cursor.execute("SELECT username FROM rental_units WHERE unit_id = ?", (unit_id,))
     unit_owner = cursor.fetchone()
     if unit_owner and unit_owner[0] == username:
         messagebox.showerror("Review Error", "You cannot review your own rental unit.")
         return
 
-    cursor.execute("SELECT COUNT(*) FROM reviews WHERE username = ? AND date(date_posted) = date('now')", (username,))
+    # Check how many reviews the user has submitted today
+    cursor.execute("SELECT COUNT(*) FROM reviews WHERE username = ? AND date_posted = ?", (username, today))
     review_count = cursor.fetchone()[0]
     if review_count >= 3:
         messagebox.showerror("Review Limit", "You can only submit 3 reviews per day.")
         return
 
+    # Check if the user has already reviewed this rental unit
     cursor.execute("SELECT COUNT(*) FROM reviews WHERE username = ? AND unit_id = ?", (username, unit_id))
     has_reviewed = cursor.fetchone()[0]
     if has_reviewed > 0:
         messagebox.showerror("Review Error", "You have already reviewed this rental unit.")
         return
 
+    # Insert the new review into the database
     cursor.execute("""
         INSERT INTO reviews (unit_id, username, rating, description, date_posted)
         VALUES (?, ?, ?, ?, ?)
