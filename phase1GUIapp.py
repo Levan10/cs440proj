@@ -2,8 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from phase1UserRegistration import signup, login
 from MainDataBase import create_tables
-from phase2GUI import start_phase2gui
-import bcrypt
+from phase2GUI import start_phase2gui  # Ensure start_phase2gui accepts the username argument
 
 # Function to handle user registration
 def register_user():
@@ -19,6 +18,8 @@ def register_user():
     messagebox.showinfo("Signup", message)
 
 # Update login function to pass username to phase2
+
+
 def login_user():
     username = entry_login_username.get()
     password = entry_login_password.get()
@@ -27,7 +28,7 @@ def login_user():
 
     if message == "Login successful!":
         root.destroy()
-        start_phase2gui(username)
+        start_phase2gui(username)  # Pass username to phase2
 
 # GUI setup
 root = tk.Tk()

@@ -1,73 +1,70 @@
+# phase2GUI.py
+
 import tkinter as tk
-from tkinter import messagebox
-from phase2User import insert_unit
-from MainDataBase import create_tables
+from tkinter import ttk, messagebox
+import sqlite3
 import subprocess
-import bcrypt
 
-# Initialize database tables
-create_tables()
+# Modify start_phase2gui to accept the username argument
+def start_phase2gui(logged_in_username):
+    conn = sqlite3.connect('Rental_Units.db')
+    cursor = conn.cursor()
 
+    def search_units_by_feature(feature):
+        cursor.execute("""
+            SELECT unit_id, title, description, features, price, username 
+            FROM rental_units 
+            WHERE features LIKE ?
+        """, ('%' + feature + '%',))
+        results = cursor.fetchall()
+        return results
 
-def open_search_interface():
-    subprocess.Popen(["python3", "phase2SearchInterface.py"])
+    def display_results(results):
+        for row in tree.get_children():
+            tree.delete(row)
+        for row in results:
+            tree.insert("", tk.END, values=row)
 
-def logout():
-    # Close the current window and open phase1GUIapp
-    root.withdraw()# Close the current window
-    subprocess.Popen(["python3", "phase1GUIapp.py"]) # Open phase1GUIapp
+    def on_search():
+        feature = entry_feature.get()
+        if not feature:
+            messagebox.showerror("Input Error", "Please enter a feature to search.")
+            return
+        results = search_units_by_feature(feature)
+        if results:
+            display_results(results)
+        else:
+            messagebox.showinfo("No Results", "No rental units found with the specified feature.")
 
+    def open_review_interface():
+        selected_item = tree.focus()
+        if not selected_item:
+            messagebox.showerror("Selection Error", "Please select a rental unit to review.")
+            return
 
-# Modify the add_unit function to use the logged-in username from Phase 1
-def add_unit(username):
-    try:
-        # Ensure that entry fields are declared globally
-        global entry_title, entry_description, entry_features, entry_price
+        selected_values = tree.item(selected_item, 'values')
+        unit_id = selected_values[0]
+        unit_title = selected_values[1]
+        unit_owner = selected_values[5]  # Assuming 'username' is the sixth column
 
-        title = entry_title.get()
-        description = entry_description.get()
-        features = entry_features.get()
-        price = float(entry_price.get())
-
-        result = insert_unit(username, title, description, features, price)
-        messagebox.showinfo("Add Rental Unit", result)
-    except ValueError:
-        messagebox.showerror("Input Error", "Please enter valid numbers for Price.")
-
-
-# GUI layout
-def start_phase2gui(username):
-    global entry_title, entry_description, entry_features, entry_price, root
+        # Pass username, unit_id, and title to the review interface
+        subprocess.Popen(["python3", "phase2review.py", str(unit_id), unit_title, logged_in_username])
 
     root = tk.Tk()
-    root.title("Rental Unit System")
+    root.title("Rental Unit Feature Search")
 
-    # GUI layout for "Add Rental Unit"
-    tk.Label(root, text="Add Rental Unit").grid(row=0, column=0, columnspan=2)
+    tk.Label(root, text="Feature:").grid(row=0, column=0)
+    entry_feature = tk.Entry(root)
+    entry_feature.grid(row=0, column=1)
+    tk.Button(root, text="Search", command=on_search).grid(row=0, column=2)
 
-    # Creating entry fields for user input
-    entry_title = tk.Entry(root)
-    entry_description = tk.Entry(root)
-    entry_features = tk.Entry(root)
-    entry_price = tk.Entry(root)
+    # Results table with an additional Username column
+    columns = ("Unit ID", "Title", "Description", "Features", "Price", "Username")
+    tree = ttk.Treeview(root, columns=columns, show="headings")
+    for col in columns:
+        tree.heading(col, text=col)
+    tree.grid(row=1, column=0, columnspan=4)
 
-    fields = ["Title:", "Description:", "Features:", "Price:"]
-    entries = [entry_title, entry_description, entry_features, entry_price]
+    tk.Button(root, text="Review", command=open_review_interface).grid(row=0, column=3)
 
-    # Grid layout for labels and entries
-    for i, field in enumerate(fields):
-        tk.Label(root, text=field).grid(row=i + 1, column=0)
-        entries[i].grid(row=i + 1, column=1)
-
-    # Add unit button (using the logged-in username)
-    tk.Button(root, text="Add Unit", command=lambda: add_unit(username)).grid(row=len(fields) + 1, column=0,
-                                                                              columnspan=2)
-    tk.Button(root, text="Search for Unit", command=open_search_interface).grid(row=len(fields) + 2, column=0,
-                                                                                columnspan=2)
-
-    # Logout button
-    tk.Button(root, text="Logout", command=logout).grid(row=len(fields) + 3, column=0, columnspan=2)
-
-
-    root.geometry("700x600")
     root.mainloop()
