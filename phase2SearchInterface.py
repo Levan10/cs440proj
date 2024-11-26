@@ -3,15 +3,35 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import subprocess
 import sys
+
 # Database Connection
 conn = sqlite3.connect('Rental_Units.db')
 cursor = conn.cursor()
 
 def search_units_by_feature(feature):
-    # Fetch unit_id along with title, description, features, and price
-    cursor.execute("SELECT unit_id, title, description, features, price FROM rental_units WHERE features LIKE ?", ('%' + feature + '%',))
+    # Fetch unit_id along with title, description, features, price
+    cursor.execute("""
+        SELECT unit_id, title, description, features, price
+        FROM rental_units
+        WHERE features LIKE ?
+        ORDER BY price DESC
+    """, ('%' + feature + '%',))
     results = cursor.fetchall()
     return results
+
+def find_users_with_two_units(feature1, feature2):
+    # Fetch users who have two units with specified features posted on the same day
+    cursor.execute("""
+        SELECT DISTINCT r1.username
+        FROM rental_units r1
+        JOIN rental_units r2
+        ON r1.username = r2.username
+        AND r1.date_posted = r2.date_posted
+        WHERE r1.features LIKE ? AND r2.features LIKE ?
+        AND r1.unit_id != r2.unit_id
+    """, ('%' + feature1 + '%', '%' + feature2 + '%'))
+    results = cursor.fetchall()
+    return [row[0] for row in results]
 
 def display_results(results):
     # Clear the Treeview before displaying new results
@@ -31,7 +51,20 @@ def on_search():
     else:
         messagebox.showinfo("No Results", "No rental units found with the specified feature.")
 
-# Example modification in phase2SearchInterface
+def on_find_users():
+    feature1 = entry_feature1.get()
+    feature2 = entry_feature2.get()
+    if not feature1 or not feature2:
+        messagebox.showerror("Input Error", "Please enter both features.")
+        return
+    results = find_users_with_two_units(feature1, feature2)
+    # Display results in the text box
+    user_results_box.delete("1.0", tk.END)  # Clear previous results
+    if results:
+        user_results_box.insert(tk.END, "\n".join(results))
+    else:
+        user_results_box.insert(tk.END, "No users found matching the criteria.")
+
 def open_review_interface(username):
     selected_item = tree.focus()  # Get the selected item in the Treeview
     if not selected_item:
@@ -57,6 +90,24 @@ entry_feature = tk.Entry(root)
 entry_feature.grid(row=0, column=1, padx=10, pady=10)
 tk.Button(root, text="Search", command=on_search).grid(row=0, column=2, padx=10, pady=10)
 
+# Two text fields for user criteria search
+tk.Label(root, text="Feature 1:").grid(row=2, column=0, padx=10, pady=10)
+entry_feature1 = tk.Entry(root)
+entry_feature1.grid(row=2, column=1, padx=10, pady=10)
+
+tk.Label(root, text="Feature 2:").grid(row=3, column=0, padx=10, pady=10)
+entry_feature2 = tk.Entry(root)
+entry_feature2.grid(row=3, column=1, padx=10, pady=10)
+
+tk.Button(root, text="Find Users", command=on_find_users).grid(row=4, column=0, columnspan=2, pady=10)
+
+# Label for text box
+tk.Label(root, text="Users with two units matching the criteria:", font=("Arial", 14, "bold")).grid(row=5, column=0, columnspan=3, pady=5)
+
+# Text box for displaying users
+user_results_box = tk.Text(root, height=10, width=60, bg="lightyellow", fg="black", font="12", wrap=tk.WORD)
+user_results_box.grid(row=6, column=0, columnspan=3, padx=10, pady=10)
+
 # Get the logged-in username from command-line arguments
 if len(sys.argv) > 1:
     logged_in_user = sys.argv[1]  # This will be the username of the logged-in user
@@ -64,9 +115,6 @@ else:
     logged_in_user = None  # Handle case where no username is passed
 
 # Review button using the logged-in username
-review_button = tk.Button(root, text="Review", command=lambda: open_review_interface(logged_in_user))
-review_button.grid(row=0, column=3, padx=10, pady=10)
-# Review button
 review_button = tk.Button(root, text="Review", command=lambda: open_review_interface(logged_in_user))
 review_button.grid(row=0, column=3, padx=10, pady=10)
 
