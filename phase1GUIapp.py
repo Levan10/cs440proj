@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from phase1UserRegistration import signup, login
 from MainDataBase import create_tables
-from phase2GUI import start_phase2gui  # Ensure start_phase2gui accepts the username argument
+from phase3GUI import start_phase2gui  # Ensure start_phase2gui accepts the username argument
 
 # Function to handle user registration
 def register_user():
