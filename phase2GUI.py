@@ -14,7 +14,7 @@ def logout(root):
 
 # Function to open the search interface
 def open_search_interface(username):
-    subprocess.Popen(["python3", "phase2SearchInterface.py", username])  # Pass the username
+    subprocess.Popen(["python3", "phase3SearchInterface.py", username])  # Pass the username
 
 # Modify the add_unit function to use the logged-in username from Phase 1
 def add_unit(username):
