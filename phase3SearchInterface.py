@@ -33,6 +33,43 @@ def find_users_with_two_units(feature1, feature2):
     results = cursor.fetchall()
     return [row[0] for row in results]
 
+#Mauricio
+def get_units_with_positive_reviews(user_x):
+    cursor.execute("""
+        SELECT DISTINCT r.unit_id, r.title, r.description, r.features, r.price
+        FROM rental_units r
+        JOIN reviews rv ON r.unit_id = rv.unit_id
+        WHERE r.username = ?
+        AND rv.rating IN ('excellent', 'good')
+        AND NOT EXISTS (
+            SELECT 1
+            FROM reviews rv2
+            WHERE rv2.unit_id = r.unit_id AND rv2.rating NOT IN ('excellent', 'good')
+        )
+    """, (user_x,))
+    return cursor.fetchall()
+
+#Mauricio
+def get_top_users_by_date(target_date):
+    cursor.execute("""
+        SELECT r.username, COUNT(*) as post_count
+        FROM rental_units r
+        WHERE r.date_posted = ?
+        GROUP BY r.username
+        HAVING COUNT(*) = (
+            SELECT MAX(post_count)
+            FROM (
+                SELECT username, COUNT(*) as post_count
+                FROM rental_units
+                WHERE date_posted = ?
+                GROUP BY username
+            )
+        )
+    """, (target_date, target_date))
+    return cursor.fetchall()
+
+
+
 def display_results(results):
     # Clear the Treeview before displaying new results
     for row in tree.get_children():
@@ -64,6 +101,33 @@ def on_find_users():
         user_results_box.insert(tk.END, "\n".join(results))
     else:
         user_results_box.insert(tk.END, "No users found matching the criteria.")
+
+
+#mauricio part 3 & 4 of phase 3
+def on_get_units_with_positive_reviews():
+    selected_user = dropdown_user.get()
+    if not selected_user:
+        messagebox.showerror("Input Error", "Please select a user.")
+        return
+    results = get_units_with_positive_reviews(selected_user)
+    if results:
+        display_results(results)
+    else:
+        messagebox.showinfo("No Results", "No rental units found with only positive reviews.")
+
+def on_get_top_users_by_date():
+    selected_date = dropdown_date.get()
+    if not selected_date:
+        messagebox.showerror("Input Error", "Please select a date.")
+        return
+    results = get_top_users_by_date(selected_date)
+    if results:
+        top_users = "\n".join([f"{row[0]}: {row[1]} posts" for row in results])
+        messagebox.showinfo("Top Users", f"Users with the most posts on {selected_date}:\n{top_users}")
+    else:
+        messagebox.showinfo("No Results", f"No users found with posts on {selected_date}.")
+
+
 
 def open_review_interface(username):
     selected_item = tree.focus()  # Get the selected item in the Treeview
@@ -107,6 +171,29 @@ tk.Label(root, text="Users with two units matching the criteria:", font=("Arial"
 # Text box for displaying users
 user_results_box = tk.Text(root, height=10, width=60, bg="lightyellow", fg="black", font="12", wrap=tk.WORD)
 user_results_box.grid(row=6, column=0, columnspan=3, padx=10, pady=10)
+
+#Mauricio
+# Dropdown for user selection (for units with positive reviews)
+cursor.execute("SELECT username FROM users")
+users = [row[0] for row in cursor.fetchall()]
+
+tk.Label(root, text="Select User:").grid(row=7, column=0, padx=10, pady=10)
+dropdown_user = ttk.Combobox(root, values=users)
+dropdown_user.grid(row=7, column=1, padx=10, pady=10)
+
+# Button for positive reviews functionality
+tk.Button(root, text="Get Units with Positive Reviews", command=on_get_units_with_positive_reviews).grid(row=8, column=0, columnspan=2, pady=10)
+
+# Dropdown for selecting a date (for top users by date)
+cursor.execute("SELECT DISTINCT date_posted FROM rental_units")
+dates = [row[0] for row in cursor.fetchall()]
+
+tk.Label(root, text="Select Date:").grid(row=10, column=0, padx=10, pady=10)
+dropdown_date = ttk.Combobox(root, values=dates)
+dropdown_date.grid(row=10, column=1, padx=10, pady=10)
+
+# Button for "Find Users by Date" functionality
+tk.Button(root, text="Get Top Users by Date", command=on_get_top_users_by_date).grid(row=11, column=0, columnspan=2, pady=10)
 
 # Get the logged-in username from command-line arguments
 if len(sys.argv) > 1:
