@@ -190,9 +190,11 @@ entry_feature2 = tk.Entry(root)
 entry_feature2.grid(row=3, column=1, padx=10, pady=10)
 tk.Button(root, text="Find Users with two units matching the criteria", command=on_find_users).grid(row=4, column=0, columnspan=2, pady=10)
 
-tk.Label(root, text="Result Box:", font=("Arial", 14, "bold")).grid(row=5, column=0, columnspan=3, pady=5)
-user_results_box = tk.Text(root, height=10, width=60, bg="lightyellow", fg="black", font="12", wrap=tk.WORD)
-user_results_box.grid(row=6, column=0, columnspan=3, padx=10, pady=10)
+tk.Label(root, text="Result Box:", font=("Arial", 14, "bold")).grid(row=2, column=1, columnspan=3, pady=5)
+user_results_box = tk.Text(root, height=8, width=45, bg="lightyellow", fg="black", font=("Arial", 10), wrap=tk.WORD)
+user_results_box.grid(row=3, column=2, rowspan=3, padx=15, pady=15, sticky="nsew")
+
+# Results table with Unit ID column
 
 cursor.execute("SELECT username FROM users")
 users = [row[0] for row in cursor.fetchall()]
